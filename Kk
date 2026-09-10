@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PENGU & FRIENDS: Academic Deck</title>
+    <style>
+        :root {
+            --bg-color: #fce4ec;
+            --card-bg: #ffffff;
+            --primary-pink: #f48fb1;
+            --accent-purple: #ce93d8;
+            --soft-blue: #e1f5fe;
+            --text-color: #4a4a4a;
+            --border-radius: 16px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .score-box {
+            background: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 2px solid var(--accent-purple);
+        }
+
+        .cheer-btn {
+            background: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .cheer-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* GAME BOARD */
+        .game-board {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-sizing: border-box;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* BOT AREA */
+        .bot-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 55px;
+            height: 55px;
+            background: var(--soft-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            border: 2px solid #b3e5fc;
+        }
+
+        /* CARD STYLES */
+        .table-card {
+            background: var(--card-bg);
+            border: 3px solid var(--accent-purple);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .card-category {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ab47bc;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-text {
+            font-size: 15px;
+            line-height: 1.3;
+            color: #333;
+        }
+
+        /* MESSAGES & SPEECH */
+        .speech-bubble {
+            background: #fff;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 13px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* HAND CARDS */
+        .hand-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #7b1fa2;
+            margin-top: 5px;
+        }
+
+        .hand-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .hand-card {
+            background: var(--card-bg);
+            border: 2px solid var(--primary-pink);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .hand-card:hover {
+            transform: translateY(-2px);
+            border-color: #ec407a;
+            background-color: #fff8fa;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            max-width: 300px;
+            text-align: center;
+            border: 3px solid var(--primary-pink);
+        }
+
+        .modal-btn {
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="score-box">✨ Очки: <span id="score">0</span></div>
+        <button class="cheer-btn" onclick="showCheer()"> Cheering Up 🐧</button>
+    </header>
+
+    <div class="game-board">
+        <!-- BOT SECTION -->
+        <div class="bot-area">
+            <div class="avatar" id="bot-avatar">🐱</div>
+            <div>
+                <strong id="bot-name">Котёнок</strong>
+                <div class="speech-bubble" id="bot-speech">Мой ход! Найди слово к этому определению:</div>
+            </div>
+        </div>
+
+        <!-- TABLE CARD (DEFINITION) -->
+        <div class="table-card">
+            <div class="card-category" id="card-cat">General Academic</div>
+            <div class="card-text" id="card-def">Загрузка карточки...</div>
+        </div>
+
+        <!-- HERO SECTION -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+            <div class="avatar" style="background: #e8eaf6; border-color: #c5cae9;">🐧</div>
+            <div class="speech-bubble" id="pengu-speech" style="flex: 1; border-color: var(--primary-pink);">
+                Выбери правильную карту из своей руки ниже!
+            </div>
+        </div>
+
+        <!-- PLAYER HAND -->
+        <div class="hand-title">Ваши карты слов:</div>
+        <div class="hand-grid" id="hand-cards">
+            <!-- Cards will be generated here -->
+        </div>
+    </div>
+
+    <!-- MODAL FOR MESSAGES -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div style="font-size: 40px; margin-bottom: 10px;" id="modal-icon">🐧</div>
+            <div id="modal-text" style="font-size: 15px; line-height: 1.4;"></div>
+            <button class="modal-btn" onclick="closeModal()">Понятненько!</button>
+        </div>
+    </div>
+
+    <script>
+        // FULL DICTIONARY DATABASE
+        const dictionary = [
+            // General Academic & Analytical
+            { word: "Accurate", def: "Correct, exact, and without any mistakes.", cat: "General Academic" },
+            { word: "Advocate", def: "To publicly support or recommend a particular policy or idea.", cat: "General Academic" },
+            { word: "Analyze", def: "To examine something in detail in order to understand it.", cat: "General Academic" },
+            { word: "Approach", def: "A way of dealing with a situation or problem.", cat: "General Academic" },
+            { word: "Assess", def: "To evaluate the quality, importance, or value of something.", cat: "General Academic" },
+            { word: "Coherent", def: "Logical, clear, and easy to understand.", cat: "General Academic" },
+            { word: "Comprehensive", def: "Including all or nearly all elements or aspects of something.", cat: "General Academic" },
+            { word: "Consequence", def: "A result or effect, typically one that is unwelcome.", cat: "General Academic" },
+            { word: "Considerable", def: "Notably large in size, amount, or extent.", cat: "General Academic" },
+            { word: "Contradict", def: "To deny the truth of a statement by asserting the opposite.", cat: "General Academic" },
+            { word: "Crucial", def: "Extremely important or necessary for success.", cat: "General Academic" },
+            { word: "Decrease", def: "To become smaller in size, amount, or degree.", cat: "General Academic" },
+            { word: "Demonstrate", def: "To show clearly by giving proof or evidence.", cat: "General Academic" },
+            { word: "Determine", def: "To decide or establish something precisely.", cat: "General Academic" },
+            { word: "Distinct", def: "Recognizably different in nature from something else.", cat: "General Academic" },
+            { word: "Emphasize", def: "To give special importance or value to something.", cat: "General Academic" },
+            { word: "Essential", def: "Completely necessary or extremely important.", cat: "General Academic" },
+            { word: "Evaluate", def: "To judge or calculate the quality, importance, or value of something.", cat: "General Academic" },
+            { word: "Evidence", def: "Facts or information indicating whether a belief or proposition is true.", cat: "General Academic" },
+            { word: "Examine", def: "To inspect something in detail to determine its nature or condition.", cat: "General Academic" },
+            { word: "Fundamental", def: "Forming a necessary base or core; of central importance.", cat: "General Academic" },
+            { word: "Illustrate", def: "To explain or make something clear using examples or diagrams.", cat: "General Academic" },
+            { word: "Impact", def: "A marked effect or influence on someone or something.", cat: "General Academic" },
+            { word: "Implication", def: "A possible future effect or result of an action or decision.", cat: "General Academic" },
+            { word: "Indicate", def: "To point out or show something clearly.", cat: "General Academic" },
+            { word: "Inevitable", def: "Certain to happen and impossible to avoid.", cat: "General Academic" },
+            { word: "Influence", def: "The capacity to have an effect on the character, development, or behavior of someone.", cat: "General Academic" },
+            { word: "Interpret", def: "To explain or understand the meaning of information, words, or actions.", cat: "General Academic" },
+            { word: "Investigate", def: "To carry out a systematic or formal inquiry to discover facts.", cat: "General Academic" },
+            { word: "Justify", def: "To show or prove that a decision, action, or idea is reasonable.", cat: "General Academic" },
+            { word: "Maintain", def: "To state or assert something strongly; or to keep something in good condition.", cat: "General Academic" },
+            { word: "Objective", def: "Based on real facts and not influenced by personal beliefs or feelings.", cat: "General Academic" },
+            { word: "Obtain", def: "To get or acquire something, usually through effort.", cat: "General Academic" },
+            { word: "Plausible", def: "Seeming reasonable or likely to be true.", cat: "General Academic" },
+            { word: "Predict", def: "To say or estimate that a specified thing will happen in the future.", cat: "General Academic" },
+            { word: "Primary", def: "Main, principal, or of chief importance.", cat: "General Academic" },
+            { word: "Propose", def: "To put forward an idea or plan for consideration.", cat: "General Academic" },
+            { word: "Reliable", def: "Consistently good in quality or performance; able to be trusted.", cat: "General Academic" },
+            { word: "Significant", def: "Sufficiently great or important to be worthy of attention.", cat: "General Academic" },
+            { word: "Sufficient", def: "Enough or adequate for a particular purpose.", cat: "General Academic" },
+
+            // Environment & Climate Change
+            { word: "Biodiversity", def: "The variety of plant and animal life in a particular habitat or in the world.", cat: "Environment" },
+            { word: "Conservation", def: "The protection and preservation of the natural environment and wildlife.", cat: "Environment" },
+            { word: "Contaminate", def: "To make something dirty, poisonous, or impure by adding a dangerous substance.", cat: "Environment" },
+            { word: "Deplete", def: "To reduce the amount of something so that there is not enough left.", cat: "Environment" },
+            { word: "Ecosystem", def: "A biological community of interacting organisms and their physical environment.", cat: "Environment" },
+            { word: "Emissions", def: "Gases or substances that are sent out into the air, especially from cars or factories.", cat: "Environment" },
+            { word: "Endangered", def: "Seriously at risk of extinction.", cat: "Environment" },
+            { word: "Environment", def: "The surroundings or conditions in which a person, animal, or plant lives.", cat: "Environment" },
+            { word: "Extinct", def: "Having no living members; no longer in existence.", cat: "Environment" },
+            { word: "Habitat", def: "The natural home or environment of an animal, plant, or other organism.", cat: "Environment" },
+            { word: "Hazardous", def: "Dangerous or risky, especially to health or safety.", cat: "Environment" },
+            { word: "Pollution", def: "The presence in the environment of a substance that has harmful or poisonous effects.", cat: "Environment" },
+            { word: "Preserve", def: "To keep something in its original state and protect it from harm.", cat: "Environment" },
+            { word: "Renewable", def: "Derived from natural sources that are constantly replenished, such as solar or wind energy.", cat: "Environment" },
+            { word: "Sustainable", def: "Able to be maintained at a certain rate or level without depleting natural resources.", cat: "Environment" },
+
+            // Society, Work & Economy
+            { word: "Abolish", def: "To formally put an end to a system, practice, or institution.", cat: "Society & Economy" },
+            { word: "Advantage", def: "A condition or circumstance that puts one in a favorable position.", cat: "Society & Economy" },
+            { word: "Community", def: "A group of people living in the same place or having a particular characteristic in common.", cat: "Society & Economy" },
+            { word: "Consumption", def: "The act of using up a resource, food, or energy.", cat: "Society & Economy" },
+            { word: "Demographic", def: "Relating to the structure of human populations, such as age, income, or education.", cat: "Society & Economy" },
+            { word: "Diverse", def: "Showing a great deal of variety; very different.", cat: "Society & Economy" },
+            { word: "Domestic", def: "Relating to the running of a home or to the internal affairs of a country.", cat: "Society & Economy" },
+            { word: "Economy", def: "The system of trade, industry, and energy production by which wealth is created and used.", cat: "Society & Economy" },
+            { word: "Employment", def: "The state of having paid work.", cat: "Society & Economy" },
+            { word: "Facilities", def: "Buildings, services, or equipment provided for a particular purpose.", cat: "Society & Economy" },
+            { word: "Globalization", def: "The process by which businesses or organizations develop international influence.", cat: "Society & Economy" },
+            { word: "Hierarchy", def: "A system in which members of an organization or society are ranked according to status.", cat: "Society & Economy" },
+            { word: "Implement", def: "To put a decision, plan, or agreement into effect.", cat: "Society & Economy" },
+            { word: "Infrastructure", def: "The basic physical systems of a country, such as roads, power supplies, and transport.", cat: "Society & Economy" },
+            { word: "Initiative", def: "An act or strategy intended to resolve a difficulty or improve a situation.", cat: "Society & Economy" },
+            { word: "Innovation", def: "A new method, idea, or product.", cat: "Society & Economy" },
+            { word: "Poverty", def: "The state of being extremely poor.", cat: "Society & Economy" },
+            { word: "Productivity", def: "The rate at which goods are produced or work is completed.", cat: "Society & Economy" },
+            { word: "Regulation", def: "An official rule or directive made and maintained by an authority.", cat: "Society & Economy" },
+            { word: "Urbanization", def: "The process by which more and more people move from rural areas to live in cities.", cat: "Society & Economy" },
+
+            // Technology & Science
+            { word: "Artificial", def: "Made or produced by human beings rather than occurring naturally.", cat: "Tech & Science" },
+            { word: "Automate", def: "To convert a process or facility to be operated by automatic or electronic equipment.", cat: "Tech & Science" },
+            { word: "Breakthrough", def: "A sudden, dramatic, and important discovery or development.", cat: "Tech & Science" },
+            { word: "Data", def: "Facts and statistics collected together for reference or analysis.", cat: "Tech & Science" },
+            { word: "Device", def: "A piece of mechanical or electronic equipment made for a particular purpose.", cat: "Tech & Science" },
+            { word: "Efficient", def: "Achieving maximum productivity with minimum wasted effort or expense.", cat: "Tech & Science" },
+            { word: "Experiment", def: "A scientific procedure undertaken to make a discovery or test a hypothesis.", cat: "Tech & Science" },
+            { word: "Manoeuvre", def: "A movement or series of moves requiring skill and care.", cat: "Tech & Science" },
+            { word: "Mechanism", def: "A system of parts working together in a machine or process.", cat: "Tech & Science" },
+            { word: "Obsolete", def: "No longer produced or used; out of date.", cat: "Tech & Science" },
+            { word: "Process", def: "A series of actions or steps taken in order to achieve a particular end.", cat: "Tech & Science" },
+            { word: "Revolutionize", def: "To completely change the way that something is done or thought about.", cat: "Tech & Science" },
+            { word: "Sophisticated", def: "Highly developed, complex, or advanced.", cat: "Tech & Science" },
+
+            // Descriptive Adjectives & Adverbs
+            { word: "Abundant", def: "Existing or available in large quantities; plentiful.", cat: "Adjectives & Adverbs" },
+            { word: "Adverse", def: "Preventing success or development; harmful or unfavorable.", cat: "Adjectives & Adverbs" },
+            { word: "Apparent", def: "Clearly visible or understood; obvious.", cat: "Adjectives & Adverbs" },
+            { word: "Drastic", def: "Likely to have a strong, far-reaching, or extreme effect.", cat: "Adjectives & Adverbs" },
+            { word: "Gradual", def: "Taking place or progressing slowly or by degrees.", cat: "Adjectives & Adverbs" },
+            { word: "Inefficient", def: "Failing to make the best use of time, money, or resources.", cat: "Adjectives & Adverbs" },
+            { word: "Prominent", def: "Important, famous, or easily noticed.", cat: "Adjectives & Adverbs" },
+            { word: "Rapid", def: "Happening, moving, or acting quickly.", cat: "Adjectives & Adverbs" },
+            { word: "Reluctant", def: "Unwilling and hesitant to do something.", cat: "Adjectives & Adverbs" },
+            { word: "Substantial", def: "Of considerable importance, size, or worth.", cat: "Adjectives & Adverbs" },
+            { word: "Sufficiently", def: "To a degree that is enough to achieve a particular purpose.", cat: "Adjectives & Adverbs" },
+            { word: "Temporary", def: "Lasting for only a limited period of time; not permanent.", cat: "Adjectives & Adverbs" }
+        ];
+
+        const bots = [
+            { name: "Котёнок", avatar: "🐱" },
+            { name: "Лисёнок", avatar: "🦊" }
+        ];
+
+        const cheerMessages = [
+            "Small steps every day lead to huge success! 🐧⭐",
+            "Mistakes are just proof that you are trying! Keep going!",
+            "You are doing amazing! Academic vocabulary is yours now! ✨",
+            "Don't give up! Your brain is making new connections right now! 🧠💖"
+        ];
+
+        let score = 0;
+        let currentTarget = null;
+        let currentBot = bots[0];
+
+        function getRandomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function startNewRound() {
+            // Pick a random bot
+            currentBot = getRandomItem(bots);
+            document.getElementById("bot-avatar").innerText = currentBot.avatar;
+            document.getElementById("bot-name").innerText = currentBot.name;
+            document.getElementById("bot-speech").innerText = "Вот новое определение! Какое слово подходит?";
+
+            // Pick a target word
+            currentTarget = getRandomItem(dictionary);
+            document.getElementById("card-cat").innerText = currentTarget.cat;
+            document.getElementById("card-def").innerText = currentTarget.def;
+
+            // Prepare 4 choices (1 correct + 3 random)
+            let choices = [currentTarget];
+            while (choices.length < 4) {
+                let randomCard = getRandomItem(dictionary);
+                if (!choices.includes(randomCard)) {
+                    choices.push(randomCard);
+                }
+            }
+            choices = shuffle(choices);
+
+            // Render hand cards
+            const handContainer = document.getElementById("hand-cards");
+            handContainer.innerHTML = "";
+            choices.forEach(card => {
+                const cardEl = document.createElement("div");
+                cardEl.className = "hand-card";
+                cardEl.innerText = card.word;
+                cardEl.onclick = () => checkAnswer(card);
+                handContainer.appendChild(cardEl);
+            });
+
+            document.getElementById("pengu-speech").innerText = "Думай внимательно! Ты обязательно справишься! 🐧";
+        }
+
+        function checkAnswer(selectedCard) {
+            if (selectedCard.word === currentTarget.word) {
+                // Correct!
+                score += 10;
+                document.getElementById("score").innerText = score;
+                document.getElementById("pengu-speech").innerText = "Супер! Это правильный ответ! ✨ 🎉";
+                
+                // Bot makes next move immediately
+                setTimeout(() => {
+                    startNewRound();
+                }, 1200);
+            } else {
+                // Wrong!
+                document.getElementById("pengu-speech").innerText = "Упс! Попробуй ещё раз, у тебя получится!";
+                openModal("🐧", `Oops! That's not quite right. Think again, you've got this! ✨<br><br><b>${selectedCard.word}</b> не подходит к этому определению.`);
+            }
+        }
+
+        function showCheer() {
+            const msg = getRandomItem(cheerMessages);
+            openModal("🐧✨", msg);
+        }
+
+        function openModal(icon, text) {
+            document.getElementById("modal-icon").innerText = icon;
+            document.getElementById("modal-text").innerHTML = text;
+            document.getElementById("modal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+
+        // Initialize game on load
+        window.onload = startNewRound;
+    </script>
+</body>
+</html>
